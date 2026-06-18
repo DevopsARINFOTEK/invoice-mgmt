@@ -8,24 +8,15 @@ const masterRoutes = require("./routes/masterRoutes");
 const app = express();
 
 app.use(cors());
-
 app.use(express.json());
 
-app.use(
-  "/api/invoices",
-  invoiceRoutes
-);
-app.use(
-  "/api/master",
-  masterRoutes
-);
+app.use("/api/invoices", invoiceRoutes);
+console.log("invoiceRoutes imported");
 
-app.get("/", (req, res) => {
-  res.send("Server Running");
-});
+app.use("/api/master", masterRoutes);
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server Running on ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

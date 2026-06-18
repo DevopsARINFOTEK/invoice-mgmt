@@ -1,8 +1,10 @@
+import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import InvoicePreview from "./InvoicePreview";
+
 
 function InvoiceForm() {
     
@@ -12,6 +14,9 @@ function InvoiceForm() {
   const [showInvoice, setShowInvoice] = useState(false);
   const [students, setStudents] = useState([]);
   const [courses, setCourses] = useState([]);
+  
+
+  const navigate = useNavigate();
 
   const [invoiceNo] = useState(
     `INV-${new Date().getFullYear()}-${Math.floor(
@@ -44,6 +49,8 @@ const loadStudents = async () => {
       "http://localhost:5000/api/master/students"
     );
 
+    console.log(res.data); // ADD THIS
+
     setStudents(res.data);
   } catch (err) {
     console.log(err);
@@ -61,6 +68,7 @@ const loadStudents = async () => {
     console.log(err);
   }
 };
+
 
   const handleChange = (index, field, value) => {
     const updated = [...items];
@@ -173,30 +181,51 @@ const loadStudents = async () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-6xl mx-auto bg-white rounded shadow p-8">
+  <div className="min-h-screen bg-gray-100 p-6">
+    <div className="max-w-6xl mx-auto bg-white rounded shadow p-8">
 
-        <h1 className="text-4xl font-bold text-center text-blue-700 mb-8">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+
+        <h1 className="text-4xl font-bold text-blue-700">
           Student Invoice Generator
         </h1>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <button
+  type="button"
+  onClick={() => navigate("/admin")} 
+  className="bg-orange-600 text-white px-5 py-2 rounded hover:bg-orange-700"
+>
+  Admin
+</button>
 
-         <input
+      </div>
+
+      {/* Student Details */}
+      <div className="grid md:grid-cols-2 gap-6">
+
+        <input
+  type="text"
   list="studentList"
   className="border p-4 rounded w-full"
   placeholder="Type Student Name"
   value={studentName}
   onChange={(e) => {
-    const selectedName = e.target.value;
+    const value = e.target.value;
 
-    setStudentName(selectedName);
+    setStudentName(value);
 
-    const student = students.find(
-      (s) => s.student_name === selectedName
+    const selectedStudent = students.find(
+      (student) =>
+        student.student_name.toLowerCase() ===
+        value.toLowerCase()
     );
 
-    setAddress(student?.address || "");
+    if (selectedStudent) {
+      setAddress(selectedStudent.address);
+    } else {
+      setAddress("");
+    }
   }}
 />
 
@@ -205,161 +234,166 @@ const loadStudents = async () => {
     <option
       key={student.id}
       value={student.student_name}
-    />
-  ))}
-</datalist>
-          <input
-            value={invoiceNo}
-            readOnly
-            className="border p-4 rounded"
-          />
-
-          <input
-            type="date"
-            className="border p-4 rounded"
-            value={invoiceDate}
-            onChange={(e) =>
-              setInvoiceDate(e.target.value)
-            }
-          />
-
-          <textarea
-  className="border p-4 rounded bg-gray-100"
-  value={address}
-  readOnly
-/>
-        </div>
-
-        <table className="w-full mt-6 border">
-          <thead className="bg-blue-600 text-white">
-            <tr>
-              <th>Course</th>
-              <th>Description</th>
-              <th>Duration</th>
-              <th>Price</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {items.map((item, index) => (
-              <tr key={index}>
-                <td>
-  <select
-  className="border w-full p-2"
-  value={item.course}
-  onChange={(e) =>
-    handleCourseSelect(
-      index,
-      e.target.value
-    )
-  }
->
-  <option value="">
-    Select Course
-  </option>
-
-  {courses.map((course) => (
-    <option
-      key={course.id}
-      value={course.id}
     >
-      {course.course_name}
+      {student.student_name}
     </option>
   ))}
-</select>
-</td>
+</datalist>
 
-<td>
-  <input
-    className="border w-full p-2 bg-gray-100"
-    value={item.description}
-    readOnly
-  />
-</td>
+        <input
+          value={invoiceNo}
+          readOnly
+          className="border p-4 rounded"
+        />
 
-    <td>
-  <input
-    className="border w-full p-2 bg-gray-100"
-    value={item.duration}
-    readOnly
-  />
-</td>
+        <input
+          type="date"
+          className="border p-4 rounded"
+          value={invoiceDate}
+          onChange={(e) =>
+            setInvoiceDate(e.target.value)
+          }
+        />
 
-<td>
-  <input
-    type="number"
-    className="border w-full p-2 bg-gray-100"
-    value={item.price}
-    readOnly
-  />
-</td>
-
-                <td>
-                  <button
-                    onClick={() =>
-                      removeRow(index)
-                    }
-                    className="bg-red-500 text-white px-4 py-2 rounded"
-                  >
-                    Remove
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        <h2 className="text-right mt-4 text-xl font-bold">
-          Total : ₹ {total}
-        </h2>
-
-        <div className="flex gap-4 mt-6">
-
-          <button
-            onClick={addRow}
-            className="bg-green-600 text-white px-5 py-2 rounded"
-          >
-            Add Course
-          </button>
-
-          <button
-            onClick={generateInvoice}
-            className="bg-blue-600 text-white px-5 py-2 rounded"
-          >
-            Generate Invoice
-          </button>
-
-          <button
-            onClick={saveInvoice}
-            className="bg-green-700 text-white px-5 py-2 rounded"
-          >
-            Save Invoice
-          </button>
-
-          <button
-            onClick={downloadPDF}
-            className="bg-purple-600 text-white px-5 py-2 rounded"
-          >
-            Download PDF
-          </button>
-
-        </div>
-
-        {showInvoice && (
-          <InvoicePreview
-            invoiceNo={invoiceNo}
-            invoiceDate={invoiceDate}
-            studentName={studentName}
-            address={address}
-            items={items}
-            total={total}
-          />
-        )}
+        <textarea
+          className="border p-4 rounded bg-gray-100"
+          value={address}
+          readOnly
+        />
 
       </div>
+
+      {/* Course Table */}
+      <table className="w-full mt-6 border">
+        <thead className="bg-blue-600 text-white">
+          <tr>
+            <th>Course</th>
+            <th>Description</th>
+            <th>Duration</th>
+            <th>Price</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {items.map((item, index) => (
+            <tr key={index}>
+              <td>
+                <select
+                  className="border w-full p-2"
+                  value={item.course}
+                  onChange={(e) =>
+                    handleCourseSelect(
+                      index,
+                      e.target.value
+                    )
+                  }
+                >
+                  <option value="">
+                    Select Course
+                  </option>
+
+                  {courses.map((course) => (
+                    <option
+                      key={course.id}
+                      value={course.id}
+                    >
+                      {course.course_name}
+                    </option>
+                  ))}
+                </select>
+              </td>
+
+              <td>
+                <input
+                  className="border w-full p-2 bg-gray-100"
+                  value={item.description}
+                  readOnly
+                />
+              </td>
+
+              <td>
+                <input
+                  className="border w-full p-2 bg-gray-100"
+                  value={item.duration}
+                  readOnly
+                />
+              </td>
+
+              <td>
+                <input
+                  type="number"
+                  className="border w-full p-2 bg-gray-100"
+                  value={item.price}
+                  readOnly
+                />
+              </td>
+
+              <td>
+                <button
+                  onClick={() =>
+                    removeRow(index)
+                  }
+                  className="bg-red-500 text-white px-4 py-2 rounded"
+                >
+                  Remove
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <h2 className="text-right mt-4 text-xl font-bold">
+        Total : ₹ {total}
+      </h2>
+
+      <div className="flex gap-4 mt-6">
+
+        <button
+          onClick={addRow}
+          className="bg-green-600 text-white px-5 py-2 rounded"
+        >
+          Add Course
+        </button>
+
+        <button
+          onClick={generateInvoice}
+          className="bg-blue-600 text-white px-5 py-2 rounded"
+        >
+          Generate Invoice
+        </button>
+
+        <button
+          onClick={saveInvoice}
+          className="bg-green-700 text-white px-5 py-2 rounded"
+        >
+          Save Invoice
+        </button>
+
+        <button
+          onClick={downloadPDF}
+          className="bg-purple-600 text-white px-5 py-2 rounded"
+        >
+          Download PDF
+        </button>
+
+      </div>
+
+      {showInvoice && (
+        <InvoicePreview
+          invoiceNo={invoiceNo}
+          invoiceDate={invoiceDate}
+          studentName={studentName}
+          address={address}
+          items={items}
+          total={total}
+        />
+      )}
+
     </div>
-  );
+  </div>
+);
 }
 
 export default InvoiceForm;

@@ -1,31 +1,17 @@
 const express = require("express");
 const router = express.Router();
-const pool = require("../db");
 
-router.get("/students", async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT * FROM students ORDER BY student_name"
-    );
+const {
+  getStudents,
+  getCourses,
+} = require("../controllers/masterController");
 
-    res.json(result.rows);
-  } catch (err) {
-    console.log(err);
-    res.status(500).json(err);
-  }
+router.get("/test", (req, res) => {
+  res.send("Master Route Working");
 });
 
-router.get("/courses", async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT * FROM courses ORDER BY course_name"
-    );
+router.get("/students", getStudents);
 
-    res.json(result.rows);
-  } catch (err) {
-    console.log(err);
-    res.status(500).json(err);
-  }
-});
+router.get("/courses", getCourses);
 
 module.exports = router;

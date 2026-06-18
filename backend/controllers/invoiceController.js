@@ -72,3 +72,23 @@ exports.saveInvoice = async (req, res) => {
     res.status(500).json(error);
   }
 };
+
+exports.getInvoices = async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT *
+      FROM invoices
+      ORDER BY id DESC
+    `);
+
+    res.json(result.rows);
+
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Error fetching invoices"
+    });
+  }
+};

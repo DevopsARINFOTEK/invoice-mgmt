@@ -1,15 +1,15 @@
-import Header from "./components/Header";
-import Footer from "./components/Footer";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import InvoiceForm from "./components/InvoiceForm";
+import AdminPage from "./components/AdminPage";
 
-// This is App.jsx
 function App() {
   return (
-    <>
-      <Header />
-      <InvoiceForm />
-      <Footer />
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<InvoiceForm />} />
+        <Route path="/admin" element={<AdminPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
